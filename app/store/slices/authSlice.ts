@@ -1,0 +1,170 @@
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+import { API_URL } from '../../constants/Config';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+const initialState: AuthState = {
+  user: null,
+  token: null,
+  isLoading: false,
+  error: null,
+};
+
+// Mock API calls (replace with real API calls once backend is ready)
+export const login = createAsyncThunk(
+  'auth/login',
+  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      // In a real app, this would be an actual API call
+      // const response = await axios.post(`${API_URL}/auth/login`, credentials);
+      
+      // Mock response
+      const mockResponse = {
+        user: {
+          id: '1',
+          email: credentials.email,
+          name: 'Test User',
+        },
+        token: 'mock_token_123456',
+      };
+      
+      return mockResponse;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(error.response?.data?.message || 'Login failed');
+      }
+      return rejectWithValue('Login failed');
+    }
+  }
+);
+
+export const register = createAsyncThunk(
+  'auth/register',
+  async (userData: { name: string; email: string; password: string }, { rejectWithValue }) => {
+    try {
+      // In a real app, this would be an actual API call
+      // const response = await axios.post(`${API_URL}/auth/register`, userData);
+      
+      // Mock response
+      const mockResponse = {
+        user: {
+          id: '1',
+          email: userData.email,
+          name: userData.name,
+        },
+        token: 'mock_token_123456',
+      };
+      
+      return mockResponse;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(error.response?.data?.message || 'Registration failed');
+      }
+      return rejectWithValue('Registration failed');
+    }
+  }
+);
+
+export const googleAuth = createAsyncThunk(
+  'auth/google',
+  async (token: string, { rejectWithValue }) => {
+    try {
+      // In a real app, this would be an actual API call
+      // const response = await axios.post(`${API_URL}/auth/google`, { token });
+      
+      // Mock response
+      const mockResponse = {
+        user: {
+          id: '1',
+          email: 'user@example.com',
+          name: 'Google User',
+        },
+        token: 'mock_google_token_123456',
+      };
+      
+      return mockResponse;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(error.response?.data?.message || 'Google authentication failed');
+      }
+      return rejectWithValue('Google authentication failed');
+    }
+  }
+);
+
+const authSlice = createSlice({
+  name: 'auth',
+  initialState,
+  reducers: {
+    logout: (state) => {
+      state.user = null;
+      state.token = null;
+      state.error = null;
+    },
+    clearError: (state) => {
+      state.error = null;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Login cases
+      .addCase(login.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(login.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+      })
+      .addCase(login.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      
+      // Register cases
+      .addCase(register.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      
+      // Google auth cases
+      .addCase(googleAuth.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(googleAuth.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+      })
+      .addCase(googleAuth.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      });
+  },
+});
+
+export const { logout, clearError } = authSlice.actions;
+export default authSlice.reducer;

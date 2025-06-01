@@ -3,7 +3,6 @@ import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTodos, updateTodo, deleteTodo } from '../store/slices/todoSlice';
 import { AppDispatch, RootState } from '../store';
-import { router } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 
@@ -16,7 +15,7 @@ interface TodoItem {
   updatedAt: string;
 }
 
-export default function HomeScreen() {
+export default function CompletedScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const { todos, isLoading, error } = useSelector((state: RootState) => state.todos);
   
@@ -24,7 +23,7 @@ export default function HomeScreen() {
     dispatch(fetchTodos());
   }, [dispatch]);
   
-  const activeTodos = todos.filter(todo => !todo.completed);
+  const completedTodos = todos.filter(todo => todo.completed);
   
   const handleToggleComplete = (id: string, completed: boolean) => {
     dispatch(updateTodo({ id, completed: !completed }));
@@ -59,23 +58,12 @@ export default function HomeScreen() {
               {item.title}
             </Text>
             <Text className="text-gray-500 text-sm" numberOfLines={1}>{item.description}</Text>
-            <Text className="text-gray-400 text-xs mt-1">Created: {formatDate(item.createdAt)}</Text>
+            <Text className="text-gray-400 text-xs mt-1">Completed: {formatDate(item.updatedAt)}</Text>
           </View>
         </View>
-        <View className="flex-row">
-          <TouchableOpacity 
-            onPress={() => router.push({
-              pathname: '/edit-task',
-              params: { id: item.id }
-            })}
-            className="mr-2"
-          >
-            <FontAwesome name="pencil" size={20} color="#6B7280" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleDelete(item.id)}>
-            <FontAwesome name="trash-o" size={20} color="#EF4444" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={() => handleDelete(item.id)}>
+          <FontAwesome name="trash-o" size={20} color="#EF4444" />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -92,15 +80,7 @@ export default function HomeScreen() {
     <View className="flex-1 bg-gray-100">
       <StatusBar style="auto" />
       <View className="p-4">
-        <View className="flex-row justify-between items-center mb-6">
-          <Text className="text-2xl font-bold text-gray-800">My Tasks</Text>
-          <TouchableOpacity 
-            className="bg-blue-500 px-4 py-2 rounded-full"
-            onPress={() => router.push('/add-task')}
-          >
-            <Text className="text-white font-medium">Add Task</Text>
-          </TouchableOpacity>
-        </View>
+        <Text className="text-2xl font-bold text-gray-800 mb-6">Completed Tasks</Text>
         
         {error ? (
           <View className="bg-red-100 p-4 rounded-md mb-4">
@@ -108,17 +88,17 @@ export default function HomeScreen() {
           </View>
         ) : null}
         
-        {activeTodos.length === 0 && !isLoading ? (
+        {completedTodos.length === 0 && !isLoading ? (
           <View className="justify-center items-center py-16">
-            <FontAwesome name="clipboard" size={64} color="#9CA3AF" />
-            <Text className="text-gray-500 text-lg mt-4">No tasks yet</Text>
+            <FontAwesome name="check-circle" size={64} color="#9CA3AF" />
+            <Text className="text-gray-500 text-lg mt-4">No completed tasks</Text>
             <Text className="text-gray-400 text-center mt-2">
-              Add a new task by tapping the + button
+              Tasks you complete will appear here
             </Text>
           </View>
         ) : (
           <FlatList
-            data={activeTodos}
+            data={completedTodos}
             renderItem={renderItem}
             keyExtractor={item => item.id}
             showsVerticalScrollIndicator={false}

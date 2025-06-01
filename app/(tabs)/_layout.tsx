@@ -1,7 +1,9 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
+import { Link, Tabs, Redirect } from 'expo-router';
 import { Pressable } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../store';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -17,6 +19,15 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { user, token } = useSelector((state: RootState) => state.auth);
+  // const user = { id : 'eqeqeq', name : 'manuel', email : 'g@g.com'} ;
+  // const token = 't-for-token';
+  
+  // Uncomment this when auth is implemented
+  // If user is not authenticated, redirect to login
+  if (!user || !token) {
+    return <Redirect href="/login" />;
+  }
 
   return (
     <Tabs
@@ -29,14 +40,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'My Tasks',
+          tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
           headerRight: () => (
-            <Link href="/modal" asChild>
+            <Link href="/add-task" asChild>
               <Pressable>
                 {({ pressed }) => (
                   <FontAwesome
-                    name="info-circle"
+                    name="plus-circle"
                     size={25}
                     color={Colors[colorScheme ?? 'light'].text}
                     style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
@@ -48,10 +59,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="completed"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Completed',
+          tabBarIcon: ({ color }) => <TabBarIcon name="check-circle" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
         }}
       />
     </Tabs>

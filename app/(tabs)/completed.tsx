@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTodos, updateTodo, deleteTodo } from '../store/slices/todoSlice';
 import { AppDispatch, RootState } from '../store';
@@ -39,60 +39,68 @@ export default function CompletedScreen() {
   };
   
   const renderItem = ({ item }: { item: TodoItem }) => (
-    <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-      <View className="flex-row justify-between items-center">
-        <View className="flex-row items-center flex-1">
+    <View style={styles.todoItem}>
+      <View style={styles.todoContent}>
+        <View style={styles.todoLeftSection}>
           <TouchableOpacity
             onPress={() => handleToggleComplete(item.id, item.completed)}
-            className="mr-3"
+            style={styles.checkboxContainer}
           >
-            <View className={`w-6 h-6 rounded-full border-2 ${item.completed ? 'bg-green-500 border-green-500' : 'border-gray-400'} justify-center items-center`}>
+            <View style={[
+              styles.checkbox,
+              item.completed && styles.checkboxCompleted
+            ]}>
               {item.completed && <FontAwesome name="check" size={16} color="white" />}
             </View>
           </TouchableOpacity>
-          <View className="flex-1">
+          <View style={styles.todoTextContainer}>
             <Text 
-              className={`text-lg font-medium ${item.completed ? 'text-gray-500 line-through' : 'text-gray-800'}`}
+              style={[
+                styles.todoTitle,
+                item.completed && styles.todoTitleCompleted
+              ]}
               numberOfLines={1}
             >
               {item.title}
             </Text>
-            <Text className="text-gray-500 text-sm" numberOfLines={1}>{item.description}</Text>
-            <Text className="text-gray-400 text-xs mt-1">Completed: {formatDate(item.updatedAt)}</Text>
+            <Text style={styles.todoDescription} numberOfLines={1}>{item.description}</Text>
+            <Text style={styles.todoDate}>Completed: {formatDate(item.updatedAt)}</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={() => handleDelete(item.id)}>
+        <TouchableOpacity 
+          onPress={() => handleDelete(item.id)}
+          style={styles.deleteButton}
+        >
           <FontAwesome name="trash-o" size={20} color="#EF4444" />
         </TouchableOpacity>
       </View>
     </View>
   );
   
-  if (isLoading && todos.length === 0) {
-    return (
-      <View className="flex-1 justify-center items-center bg-gray-100">
-        <ActivityIndicator size="large" color="#3B82F6" />
-      </View>
-    );
-  }
-  
   return (
-    <View className="flex-1 bg-gray-100">
+    <View style={styles.container}>
       <StatusBar style="auto" />
-      <View className="p-4">
-        <Text className="text-2xl font-bold text-gray-800 mb-6">Completed Tasks</Text>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Completed Tasks</Text>
+        </View>
         
         {error ? (
-          <View className="bg-red-100 p-4 rounded-md mb-4">
-            <Text className="text-red-700">{error}</Text>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
           </View>
         ) : null}
         
-        {completedTodos.length === 0 && !isLoading ? (
-          <View className="justify-center items-center py-16">
+        {isLoading && todos.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <ActivityIndicator size="large" color="#2563EB" />
+            <Text style={[styles.emptyTitle, { marginTop: 16 }]}>Loading tasks...</Text>
+          </View>
+        ) : completedTodos.length === 0 ? (
+          <View style={styles.emptyContainer}>
             <FontAwesome name="check-circle" size={64} color="#9CA3AF" />
-            <Text className="text-gray-500 text-lg mt-4">No completed tasks</Text>
-            <Text className="text-gray-400 text-center mt-2">
+            <Text style={styles.emptyTitle}>No completed tasks</Text>
+            <Text style={styles.emptySubtitle}>
               Tasks you complete will appear here
             </Text>
           </View>
@@ -102,9 +110,129 @@ export default function CompletedScreen() {
             renderItem={renderItem}
             keyExtractor={item => item.id}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
           />
         )}
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  errorContainer: {
+    backgroundColor: '#FEE2E2',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#991B1B',
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 64,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#6B7280',
+    marginTop: 16,
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  listContent: {
+    paddingBottom: 24,
+  },
+  todoItem: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  todoContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  todoLeftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  checkboxContainer: {
+    marginRight: 12,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#9CA3AF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxCompleted: {
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
+  },
+  todoTextContainer: {
+    flex: 1,
+  },
+  todoTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  todoTitleCompleted: {
+    color: '#6B7280',
+    textDecorationLine: 'line-through',
+  },
+  todoDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  todoDate: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  deleteButton: {
+    marginLeft: 16,
+  },
+});

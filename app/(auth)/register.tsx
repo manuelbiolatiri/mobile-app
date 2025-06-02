@@ -162,7 +162,7 @@ export default function RegisterScreen() {
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
                   style={styles.input}
-                  placeholder="Create a password"
+                  placeholder="Enter a password"
                   secureTextEntry
                   onBlur={onBlur}
                   onChangeText={onChange}

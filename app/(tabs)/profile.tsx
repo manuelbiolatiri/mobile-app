@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/slices/authSlice';
 import { AppDispatch, RootState } from '../store';
@@ -33,68 +33,148 @@ export default function ProfileScreen() {
   };
   
   return (
-    <View className="flex-1 bg-gray-100">
+    <View style={styles.container}>
       <StatusBar style="auto" />
-      <View className="p-4">
-        <Text className="text-2xl font-bold text-gray-800 mb-6">Profile</Text>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Profile</Text>
+        </View>
         
-        <View className="bg-white rounded-lg p-6 shadow-sm mb-6">
-          <View className="items-center mb-4">
-            <View className="w-20 h-20 bg-blue-500 rounded-full justify-center items-center mb-3">
-              <Text className="text-white text-2xl font-bold">
+        <View style={styles.card}>
+          <View style={styles.profileHeader}>
+            <View style={styles.avatarContainer}>
+              <Text style={styles.avatarText}>
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </Text>
             </View>
-            <Text className="text-xl font-bold">{user?.name || 'User'}</Text>
-            <Text className="text-gray-500">{user?.email || 'user@example.com'}</Text>
+            <Text style={styles.userName}>{user?.name || 'User'}</Text>
+            <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
           </View>
         </View>
         
-        <View className="bg-white rounded-lg shadow-sm mb-6">
+        <View style={styles.menuCard}>
           <TouchableOpacity 
-            className="p-4 border-b border-gray-100 flex-row items-center"
-            onPress={() => router.push('/settings')}
-          >
-            <FontAwesome name="cog" size={20} color="#6B7280" className="mr-3" />
-            <Text className="text-gray-800 ml-3">Settings</Text>
-            <FontAwesome name="chevron-right" size={16} color="#9CA3AF" style={{ marginLeft: 'auto' }} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            className="p-4 border-b border-gray-100 flex-row items-center"
+            style={styles.menuItem}
             onPress={() => {/* Open help/support */}}
           >
-            <FontAwesome name="question-circle" size={20} color="#6B7280" className="mr-3" />
-            <Text className="text-gray-800 ml-3">Help & Support</Text>
-            <FontAwesome name="chevron-right" size={16} color="#9CA3AF" style={{ marginLeft: 'auto' }} />
+            <View style={styles.menuItemContent}>
+              <FontAwesome name="question-circle" size={20} color="#6B7280" />
+              <Text style={styles.menuItemText}>Help & Support</Text>
+            </View>
+            <FontAwesome name="chevron-right" size={16} color="#9CA3AF" />
           </TouchableOpacity>
           
           <TouchableOpacity 
-            className="p-4 border-b border-gray-100 flex-row items-center"
-            onPress={() => {/* Open privacy policy */}}
+            style={[styles.menuItem, styles.logoutButton]}
+            onPress={handleLogout}
           >
-            <FontAwesome name="lock" size={20} color="#6B7280" className="mr-3" />
-            <Text className="text-gray-800 ml-3">Privacy Policy</Text>
-            <FontAwesome name="chevron-right" size={16} color="#9CA3AF" style={{ marginLeft: 'auto' }} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            className="p-4 flex-row items-center"
-            onPress={() => {/* Open terms of service */}}
-          >
-            <FontAwesome name="file-text-o" size={20} color="#6B7280" className="mr-3" />
-            <Text className="text-gray-800 ml-3">Terms of Service</Text>
-            <FontAwesome name="chevron-right" size={16} color="#9CA3AF" style={{ marginLeft: 'auto' }} />
+            <View style={styles.menuItemContent}>
+              <FontAwesome name="sign-out" size={20} color="#DC2626" />
+              <Text style={[styles.menuItemText, styles.logoutText]}>Logout</Text>
+            </View>
           </TouchableOpacity>
         </View>
-        
-        <TouchableOpacity 
-          className="bg-red-500 p-4 rounded-md"
-          onPress={handleLogout}
-        >
-          <Text className="text-white text-center font-bold">Logout</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  profileHeader: {
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#2563EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  avatarText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  userEmail: {
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  menuCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  menuItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: '#111827',
+    marginLeft: 12,
+  },
+  logoutButton: {
+    borderBottomWidth: 0,
+  },
+  logoutText: {
+    color: '#DC2626',
+  },
+});

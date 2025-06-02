@@ -20,8 +20,6 @@ function TabBarIcon(props: {
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { user, token } = useSelector((state: RootState) => state.auth);
-  // const user = { id : 'eqeqeq', name : 'manuel', email : 'g@g.com'} ;
-  // const token = 't-for-token';
   
   // Uncomment this when auth is implemented
   // If user is not authenticated, redirect to login
@@ -56,6 +54,13 @@ export default function TabLayout() {
               </Pressable>
             </Link>
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="pomodoro"
+        options={{
+          title: 'Pomodoro',
+          tabBarIcon: ({ color }) => <TabBarIcon name="clock-o" color={color} />,
         }}
       />
       <Tabs.Screen

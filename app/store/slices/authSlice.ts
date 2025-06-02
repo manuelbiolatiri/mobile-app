@@ -15,6 +15,14 @@ interface AuthState {
   error: string | null;
 }
 
+// Dummy user for testing
+const DUMMY_USER = {
+  id: '1',
+  email: 'test@mypadi.com',
+  name: 'Test User',
+  password: 'test123456', // This is just for mock authentication
+};
+
 const initialState: AuthState = {
   user: null,
   token: null,
@@ -27,20 +35,19 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      // In a real app, this would be an actual API call
-      // const response = await axios.post(`${API_URL}/auth/login`, credentials);
-      
-      // Mock response
-      const mockResponse = {
-        user: {
-          id: '1',
-          email: credentials.email,
-          name: 'Test User',
-        },
-        token: 'mock_token_123456',
-      };
-      
-      return mockResponse;
+      // Mock authentication logic
+      if (credentials.email === DUMMY_USER.email && credentials.password === DUMMY_USER.password) {
+        return {
+          user: {
+            id: DUMMY_USER.id,
+            email: DUMMY_USER.email,
+            name: DUMMY_USER.name,
+          },
+          token: 'mock_token_123456',
+        };
+      } else {
+        return rejectWithValue('Invalid email or password');
+      }
     } catch (error) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(error.response?.data?.message || 'Login failed');
@@ -54,13 +61,15 @@ export const register = createAsyncThunk(
   'auth/register',
   async (userData: { name: string; email: string; password: string }, { rejectWithValue }) => {
     try {
-      // In a real app, this would be an actual API call
-      // const response = await axios.post(`${API_URL}/auth/register`, userData);
+      // Mock registration logic
+      if (userData.email === DUMMY_USER.email) {
+        return rejectWithValue('Email already exists');
+      }
       
-      // Mock response
+      // Mock successful registration
       const mockResponse = {
         user: {
-          id: '1',
+          id: '2', // Different ID from dummy user
           email: userData.email,
           name: userData.name,
         },

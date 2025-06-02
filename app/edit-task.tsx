@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateTodo } from './store/slices/todoSlice';
@@ -48,90 +48,198 @@ export default function EditTaskScreen() {
   
   if (!task) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-100">
-        <Text className="text-gray-500">Task not found</Text>
-        <TouchableOpacity 
-          className="mt-4 bg-blue-500 px-4 py-2 rounded-md"
-          onPress={() => router.back()}
-        >
-          <Text className="text-white font-medium">Go Back</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <Text style={styles.backButtonText}>← Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>Edit Task</Text>
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorMessage}>Task not found</Text>
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.buttonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
   
   return (
-    <View className="flex-1 bg-gray-100">
+    <View style={styles.container}>
       <StatusBar style="auto" />
-      <View className="p-4 flex-row items-center border-b border-gray-200 bg-white">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <FontAwesome name="arrow-left" size={20} color="#374151" />
+      <View style={styles.header}>
+        <TouchableOpacity 
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-gray-800">Edit Task</Text>
+        <Text style={styles.title}>Edit Task</Text>
       </View>
       
-      <ScrollView className="flex-1 p-4">
-        <View className="mb-4">
-          <Text className="text-gray-700 mb-2 font-medium">Task Title</Text>
-          <Controller
-            control={control}
-            rules={{
-              required: 'Title is required',
-              minLength: {
-                value: 3,
-                message: 'Title must be at least 3 characters'
-              }
-            }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                className="bg-white p-4 rounded-md border border-gray-300"
-                placeholder="Enter task title"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
+      <ScrollView 
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.form}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Task Title</Text>
+            <Controller
+              control={control}
+              rules={{
+                required: 'Title is required',
+                minLength: {
+                  value: 3,
+                  message: 'Title must be at least 3 characters'
+                }
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter task title"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  placeholderTextColor="#9CA3AF"
+                />
+              )}
+              name="title"
+            />
+            {errors.title && (
+              <Text style={styles.errorMessage}>{errors.title.message}</Text>
             )}
-            name="title"
-          />
-          {errors.title && <Text className="text-red-500 mt-1">{errors.title.message}</Text>}
-        </View>
-        
-        <View className="mb-6">
-          <Text className="text-gray-700 mb-2 font-medium">Description</Text>
-          <Controller
-            control={control}
-            rules={{
-              required: 'Description is required'
-            }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                className="bg-white p-4 rounded-md border border-gray-300"
-                placeholder="Enter task description"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                multiline
-                numberOfLines={4}
-                style={{ height: 120, textAlignVertical: 'top' }}
-              />
+          </View>
+          
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Description</Text>
+            <Controller
+              control={control}
+              rules={{
+                required: 'Description is required'
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Enter task description"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                  placeholderTextColor="#9CA3AF"
+                />
+              )}
+              name="description"
+            />
+            {errors.description && (
+              <Text style={styles.errorMessage}>{errors.description.message}</Text>
             )}
-            name="description"
-          />
-          {errors.description && <Text className="text-red-500 mt-1">{errors.description.message}</Text>}
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={handleSubmit(onSubmit)}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.buttonText}>Update Task</Text>
+            )}
+          </TouchableOpacity>
         </View>
-        
-        <TouchableOpacity 
-          className="bg-blue-500 p-4 rounded-md"
-          onPress={handleSubmit(onSubmit)}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className="text-white text-center font-bold">Update Task</Text>
-          )}
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  backButton: {
+    marginRight: 12,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  content: {
+    flex: 1,
+  },
+  form: {
+    padding: 24,
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: 'white',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    fontSize: 16,
+    color: '#111827',
+  },
+  textArea: {
+    height: 120,
+    paddingTop: 12,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorMessage: {
+    color: '#DC2626',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  button: {
+    backgroundColor: '#2563EB',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});

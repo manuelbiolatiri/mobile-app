@@ -21,6 +21,7 @@ type LoginFormData = {
 export default function LoginScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const { isLoading, error } = useSelector((state: RootState) => state.auth);
+  const [showPassword, setShowPassword] = React.useState(false);
   
   const [request, response, promptAsync] = Google.useAuthRequest({
     clientId: GOOGLE_CLIENT_ID,
@@ -110,28 +111,40 @@ export default function LoginScreen() {
           
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Password</Text>
-            <Controller
-              control={control}
-              rules={{
-                required: 'Password is required',
-                minLength: {
-                  value: 6,
-                  message: 'Password must be at least 6 characters'
-                }
-              }}
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your password"
-                  secureTextEntry
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  value={value}
-                  placeholderTextColor="#9CA3AF"
+            <View style={styles.passwordContainer}>
+              <Controller
+                control={control}
+                rules={{
+                  required: 'Password is required',
+                  minLength: {
+                    value: 6,
+                    message: 'Password must be at least 6 characters'
+                  }
+                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, styles.passwordInput]}
+                    placeholder="Enter your password"
+                    secureTextEntry={!showPassword}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    placeholderTextColor="#9CA3AF"
+                  />
+                )}
+                name="password"
+              />
+              <TouchableOpacity 
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <FontAwesome 
+                  name={showPassword ? "eye" : "eye-slash"} 
+                  size={20} 
+                  color="#6B7280" 
                 />
-              )}
-              name="password"
-            />
+              </TouchableOpacity>
+            </View>
             {errors.password && (
               <Text style={styles.errorMessage}>{errors.password.message}</Text>
             )}
@@ -293,5 +306,20 @@ const styles = StyleSheet.create({
     color: '#2563EB',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  passwordContainer: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passwordInput: {
+    flex: 1,
+    paddingRight: 50, // Make space for the eye icon
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    height: '100%',
+    justifyContent: 'center',
   },
 });

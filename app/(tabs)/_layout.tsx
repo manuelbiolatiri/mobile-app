@@ -45,7 +45,7 @@ export default function TabLayout() {
           title: 'My Tasks',
           tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
           headerRight: () => (
-            <Link href="/add-task" asChild>
+            <Link href="/create-task" asChild>
               <Pressable>
                 {({ pressed }) => (
                   <FontAwesome

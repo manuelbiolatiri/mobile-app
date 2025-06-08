@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } fr
 import { useForm, Controller } from 'react-hook-form';
 import { TextInput } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, googleAuth } from '../store/slices/authSlice';
+import { login } from '../store/slices/authSlice';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';

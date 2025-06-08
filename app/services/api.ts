@@ -1,5 +1,11 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+
+// Simple, clear base URL - change this to your actual API URL
+const BASE_URL = 'http://localhost:9000/v1';
+
+const AUTH_TOKEN_KEY = '@MyPadi:authToken';
 
 export enum TaskPriority {
   LOW = 'LOW',
@@ -72,14 +78,17 @@ export interface Task {
   updatedAt: Date;
 }
 
-// Update BASE_URL to use the correct server address
-// If running on a physical device or emulator, localhost won't work
-// We need to use the actual IP address or domain
-const BASE_URL = 'http://127.0.0.1:9000/v1'; // Android emulator
-// const BASE_URL = 'http://localhost:9000/v1'; // iOS simulator
-// const BASE_URL = 'http://YOUR_MACHINE_IP:9000/v1'; // Physical device
-
-const AUTH_TOKEN_KEY = '@MyPadi:authToken';
+export interface PaginatedResponse<T> {
+  message: string;
+  data: T[];
+  meta: {
+    perPage: number;
+    total: number;
+    count: number;
+    currentPage: number;
+    totalPages: number;
+  };
+}
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -320,8 +329,13 @@ export const taskApi = {
     return response.data;
   },
 
-  getTasks: async (): Promise<Task[]> => {
-    const response = await api.get('/tasks');
+  getTasks: async (page: number = 1, pageSize: number = 10): Promise<PaginatedResponse<Task>> => {
+    const response = await api.get('/tasks', {
+      params: { 
+        page,
+        pageSize
+      }
+    });
     return response.data;
   },
 

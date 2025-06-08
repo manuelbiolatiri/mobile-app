@@ -24,56 +24,65 @@ export default function ProfileScreen() {
           text: "Logout", 
           onPress: () => {
             dispatch(logout());
-            router.replace('/login');
           },
           style: "destructive"
         }
       ]
     );
   };
-  
+
+  const fullName = user ? `${user.firstName} ${user.lastName}` : 'User';
+  const firstLetter = user?.firstName ? user.firstName[0].toUpperCase() : 'U';
+
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
+      <View style={styles.header}>
+        <Text style={styles.title}>Profile</Text>
+      </View>
+
       <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Profile</Text>
-        </View>
-        
-        <View style={styles.card}>
-          <View style={styles.profileHeader}>
-            <View style={styles.avatarContainer}>
-              <Text style={styles.avatarText}>
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-              </Text>
-            </View>
-            <Text style={styles.userName}>{user?.name || 'User'}</Text>
-            <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
+        <View style={styles.userInfo}>
+          <View style={styles.avatarContainer}>
+            <FontAwesome name="user-circle" size={80} color="#4B5563" />
           </View>
+          <Text style={styles.userName}>{fullName}</Text>
+          <Text style={styles.userEmail}>{user?.email || 'No email'}</Text>
         </View>
-        
-        <View style={styles.menuCard}>
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => {/* Open help/support */}}
-          >
-            <View style={styles.menuItemContent}>
-              <FontAwesome name="question-circle" size={20} color="#6B7280" />
-              <Text style={styles.menuItemText}>Help & Support</Text>
-            </View>
-            <FontAwesome name="chevron-right" size={16} color="#9CA3AF" />
+
+        <View style={styles.menuSection}>
+          <TouchableOpacity style={styles.menuItem}>
+            <FontAwesome name="user" size={20} color="#4B5563" />
+            <Text style={styles.menuItemText}>Edit Profile</Text>
+            <FontAwesome name="chevron-right" size={14} color="#9CA3AF" />
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.menuItem, styles.logoutButton]}
-            onPress={handleLogout}
-          >
-            <View style={styles.menuItemContent}>
-              <FontAwesome name="sign-out" size={20} color="#DC2626" />
-              <Text style={[styles.menuItemText, styles.logoutText]}>Logout</Text>
-            </View>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <FontAwesome name="bell" size={20} color="#4B5563" />
+            <Text style={styles.menuItemText}>Notifications</Text>
+            <FontAwesome name="chevron-right" size={14} color="#9CA3AF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <FontAwesome name="lock" size={20} color="#4B5563" />
+            <Text style={styles.menuItemText}>Privacy</Text>
+            <FontAwesome name="chevron-right" size={14} color="#9CA3AF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <FontAwesome name="question-circle" size={20} color="#4B5563" />
+            <Text style={styles.menuItemText}>Help & Support</Text>
+            <FontAwesome name="chevron-right" size={14} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity 
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
+          <FontAwesome name="sign-out" size={20} color="#DC2626" />
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -84,56 +93,39 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 24,
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '600',
     color: '#111827',
   },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 24,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+  content: {
+    flex: 1,
+    padding: 20,
   },
-  profileHeader: {
+  userInfo: {
     alignItems: 'center',
+    marginBottom: 30,
   },
   avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#2563EB',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#E5E7EB',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: 'white',
-  },
   userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '600',
     color: '#111827',
     marginBottom: 4,
   },
@@ -141,40 +133,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6B7280',
   },
-  menuCard: {
-    backgroundColor: 'white',
+  menuSection: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    padding: 8,
+    marginBottom: 20,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  menuItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    borderBottomColor: '#E5E7EB',
   },
   menuItemText: {
-    fontSize: 16,
-    color: '#111827',
+    flex: 1,
     marginLeft: 12,
+    fontSize: 16,
+    color: '#374151',
   },
   logoutButton: {
-    borderBottomWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FEE2E2',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 'auto',
   },
-  logoutText: {
+  logoutButtonText: {
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: '600',
     color: '#DC2626',
   },
 });

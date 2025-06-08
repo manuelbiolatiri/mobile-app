@@ -1,25 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_URL } from '../../constants/Config';
+import { authApi, AuthResponse, LoginDto, RegisterDto, User } from '../../services/api';
+import { router } from 'expo-router';
 
 // Constants
 const AUTH_TOKEN_KEY = '@MyPadi:authToken';
 const USER_DATA_KEY = '@MyPadi:userData';
-
-// Dummy user for testing
-const DUMMY_USER = {
-  id: '1',
-  email: 'test@mypadi.com',
-  name: 'Test User',
-  password: 'test123456',
-};
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
 
 interface AuthState {
   user: User | null;
@@ -48,14 +34,18 @@ export const initializeAuth = createAsyncThunk(
       ]);
 
       if (token && userData) {
-        return {
-          token,
-          user: JSON.parse(userData),
-        };
+        const user = JSON.parse(userData) as User;
+        if (!user.id || !user.email) {
+          await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_DATA_KEY]);
+          return { token: null, user: null };
+        }
+        return { token, user };
       }
 
+      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_DATA_KEY]);
       return { token: null, user: null };
     } catch (error) {
+      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_DATA_KEY]);
       return rejectWithValue('Failed to initialize auth state');
     }
   }
@@ -63,116 +53,71 @@ export const initializeAuth = createAsyncThunk(
 
 export const login = createAsyncThunk(
   'auth/login',
-  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+  async (credentials: LoginDto, { rejectWithValue }) => {
     try {
-      // Mock authentication logic
-      if (credentials.email === DUMMY_USER.email && credentials.password === DUMMY_USER.password) {
-        const response = {
-          user: {
-            id: DUMMY_USER.id,
-            email: DUMMY_USER.email,
-            name: DUMMY_USER.name,
-          },
-          token: 'dummy_token_123456',
-        };
-
-        // Store auth data
-        await Promise.all([
-          AsyncStorage.setItem(AUTH_TOKEN_KEY, response.token),
-          AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(response.user)),
-        ]);
-
-        return response;
+      console.log('🔑 Starting login process...');
+      const response = await authApi.login(credentials);
+      
+      if (!response.user || !response.token) {
+        throw new Error('Invalid response from server');
       }
 
-      return rejectWithValue('Invalid email or password');
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(error.response?.data?.message || 'Login failed');
-      }
-      return rejectWithValue('Login failed');
+      // Store user data
+      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(response.user));
+      console.log('✅ Login successful, redirecting...');
+
+      return response;
+    } catch (error: any) {
+      console.error('❌ Login failed:', error);
+      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_DATA_KEY]);
+      
+      // Extract the most user-friendly error message
+      const errorMessage = error.message === 'Network Error' 
+        ? 'Unable to connect to server. Please check your internet connection.'
+        : error.message || 'Login failed';
+      
+      return rejectWithValue(errorMessage);
     }
   }
 );
 
 export const register = createAsyncThunk(
   'auth/register',
-  async (userData: { name: string; email: string; password: string }, { rejectWithValue }) => {
+  async (userData: RegisterDto, { rejectWithValue }) => {
     try {
-      // Mock registration logic
-      if (userData.email === DUMMY_USER.email) {
-        return rejectWithValue('Email already exists');
+      console.log('📝 Starting registration process...');
+      const response = await authApi.register(userData);
+      
+      if (!response.user || !response.token) {
+        throw new Error('Invalid response from server');
       }
 
-      const response = {
-        user: {
-          id: Math.random().toString(36).substr(2, 9),
-          email: userData.email,
-          name: userData.name,
-        },
-        token: 'dummy_token_' + Math.random().toString(36).substr(2, 9),
-      };
-
-      // Store auth data
-      await Promise.all([
-        AsyncStorage.setItem(AUTH_TOKEN_KEY, response.token),
-        AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(response.user)),
-      ]);
+      // Store user data
+      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(response.user));
+      console.log('✅ Registration successful, redirecting...');
 
       return response;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(error.response?.data?.message || 'Registration failed');
-      }
-      return rejectWithValue('Registration failed');
+    } catch (error: any) {
+      console.error('❌ Registration failed:', error);
+      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_DATA_KEY]);
+      return rejectWithValue(error.message || 'Registration failed');
     }
   }
 );
 
-export const resetPassword = createAsyncThunk(
-  'auth/resetPassword',
-  async (email: string, { rejectWithValue }) => {
+export const logout = createAsyncThunk(
+  'auth/logout',
+  async (_, { rejectWithValue }) => {
     try {
-      // Mock password reset
-      if (email === DUMMY_USER.email) {
-        return true;
-      }
-      return rejectWithValue('Email not found');
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(error.response?.data?.message || 'Password reset failed');
-      }
-      return rejectWithValue('Password reset failed');
-    }
-  }
-);
-
-export const googleAuth = createAsyncThunk(
-  'auth/google',
-  async (token: string, { rejectWithValue }) => {
-    try {
-      // Mock Google auth
-      const response = {
-        user: {
-          id: 'google_' + Math.random().toString(36).substr(2, 9),
-          email: 'google_user@example.com',
-          name: 'Google User',
-        },
-        token: 'google_token_' + Math.random().toString(36).substr(2, 9),
-      };
-
-      // Store auth data
-      await Promise.all([
-        AsyncStorage.setItem(AUTH_TOKEN_KEY, response.token),
-        AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(response.user)),
-      ]);
-
-      return response;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(error.response?.data?.message || 'Google authentication failed');
-      }
-      return rejectWithValue('Google authentication failed');
+      console.log('🚪 Starting logout process...');
+      await authApi.logout();
+      return true;
+    } catch (error: any) {
+      console.error('❌ Logout error:', error);
+      return rejectWithValue(error.message || 'Logout failed');
+    } finally {
+      // Always clear local storage on logout attempt
+      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_DATA_KEY]);
     }
   }
 );
@@ -181,14 +126,6 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    logout: (state) => {
-      // Clear storage
-      AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_DATA_KEY]);
-      
-      state.user = null;
-      state.token = null;
-      state.error = null;
-    },
     clearError: (state) => {
       state.error = null;
     },
@@ -198,16 +135,29 @@ const authSlice = createSlice({
       // Initialize cases
       .addCase(initializeAuth.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
       .addCase(initializeAuth.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isInitialized = true;
+        state.error = null;
+
+        // Redirect based on auth state
+        if (action.payload.token && action.payload.user) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/(auth)/login');
+        }
       })
-      .addCase(initializeAuth.rejected, (state) => {
+      .addCase(initializeAuth.rejected, (state, action) => {
         state.isLoading = false;
         state.isInitialized = true;
+        state.error = action.payload as string;
+        state.user = null;
+        state.token = null;
+        router.replace('/(auth)/login');
       })
       
       // Login cases
@@ -219,10 +169,18 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.error = null;
+        
+        // Use setTimeout to ensure state is updated before navigation
+        setTimeout(() => {
+          router.replace('/(tabs)');
+        }, 100);
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+        state.user = null;
+        state.token = null;
       })
       
       // Register cases
@@ -234,41 +192,41 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.error = null;
+        
+        // Use setTimeout to ensure state is updated before navigation
+        setTimeout(() => {
+          router.replace('/(tabs)');
+        }, 100);
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+        state.user = null;
+        state.token = null;
       })
       
-      // Reset password cases
-      .addCase(resetPassword.pending, (state) => {
+      // Logout cases
+      .addCase(logout.pending, (state) => {
         state.isLoading = true;
-        state.error = null;
       })
-      .addCase(resetPassword.fulfilled, (state) => {
+      .addCase(logout.fulfilled, (state) => {
+        state.user = null;
+        state.token = null;
         state.isLoading = false;
+        state.error = null;
+        router.replace('/(auth)/login');
       })
-      .addCase(resetPassword.rejected, (state, action) => {
+      .addCase(logout.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
-      })
-      
-      // Google auth cases
-      .addCase(googleAuth.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(googleAuth.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-      })
-      .addCase(googleAuth.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
+        // Still clear the state even if the API call fails
+        state.user = null;
+        state.token = null;
+        router.replace('/(auth)/login');
       });
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { clearError } = authSlice.actions;
 export default authSlice.reducer;

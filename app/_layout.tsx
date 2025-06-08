@@ -1,13 +1,14 @@
-import { Stack, Redirect } from 'expo-router';
+import { Stack } from 'expo-router';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store';
-import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { RootState } from './store';
 import { useEffect } from 'react';
 import { initializeAuth } from './store/slices/authSlice';
 import { AppDispatch } from './store';
 import CustomErrorBoundary from './components/ErrorBoundary';
+import { LoadingScreen } from './components/LoadingScreen';
 
 export default function RootLayout() {
   return (
@@ -24,16 +25,14 @@ function RootLayoutNav() {
   const { token, isInitialized, isLoading } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    dispatch(initializeAuth());
-  }, [dispatch]);
+    if (!isInitialized) {
+      dispatch(initializeAuth());
+    }
+  }, [dispatch, isInitialized]);
 
   // Show loading screen while initializing auth state
   if (!isInitialized || isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -72,9 +71,6 @@ function RootLayoutNav() {
             gestureEnabled: false
           }}
         />
-
-        {/* Handle authentication redirect */}
-        {!token && <Redirect href="/" />}
       </Stack>
     </View>
   );
@@ -88,6 +84,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
   },
 });

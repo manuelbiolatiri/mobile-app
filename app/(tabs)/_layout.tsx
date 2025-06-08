@@ -2,7 +2,7 @@ import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link, Tabs, Redirect } from 'expo-router';
 import { Pressable } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 
 import Colors from '@/constants/Colors';
@@ -19,12 +19,16 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  const { user, token, isInitialized } = useSelector((state: RootState) => state.auth);
   
-  // Uncomment this when auth is implemented
+  // Wait for auth to be initialized
+  if (!isInitialized) {
+    return null;
+  }
+
   // If user is not authenticated, redirect to login
   if (!user || !token) {
-    return <Redirect href="/login" />;
+    return <Redirect href="/(auth)/login" />;
   }
 
   return (

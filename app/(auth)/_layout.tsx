@@ -4,11 +4,16 @@ import { RootState } from '../store';
 import { Redirect } from 'expo-router';
 
 export default function AuthLayout() {
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  const { user, token, isInitialized } = useSelector((state: RootState) => state.auth);
+
+  // Wait for auth to be initialized before redirecting
+  if (!isInitialized) {
+    return null;
+  }
 
   // If user is authenticated, redirect to home
   if (user && token) {
-    return <Redirect href="/" />;
+    return <Redirect href="/(tabs)" />;
   }
 
   return (

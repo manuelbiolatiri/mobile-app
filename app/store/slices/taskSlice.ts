@@ -1,170 +1,170 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { taskApi, Task, CreateTaskDto } from '../../services/api';
+import { createSlice } from '@reduxjs/toolkit';
+import { Task, TaskPriority } from '../../services/api';
 
-interface TaskState {
+type TaskSearch = {
+  page?: number;
+  perPage?: number;
+  sort?: string;
+  order?: 'asc' | 'desc';
+  status?: 'all' | 'active' | 'completed';
+  priority?: TaskPriority;
+};
+
+type TaskState = {
   tasks: Task[];
   currentTask: Task | null;
+  perPage: number;
+  totalPages: number;
+  total: number;
+  count: number;
+  currentPage: number;
   isLoading: boolean;
   error: string | null;
-}
+  searchParams: TaskSearch;
+  sort: string;
+  isOrderAsc: boolean;
+};
 
 const initialState: TaskState = {
   tasks: [],
   currentTask: null,
+  perPage: 10,
+  totalPages: 1,
+  total: 0,
+  count: 0,
+  currentPage: 1,
   isLoading: false,
   error: null,
+  searchParams: {
+    page: 1,
+    perPage: 10,
+    status: 'all',
+  },
+  sort: '',
+  isOrderAsc: true,
 };
 
-export const fetchTasks = createAsyncThunk(
-  'tasks/fetchAll',
-  async (_, { rejectWithValue }) => {
-    try {
-      const tasks = await taskApi.getTasks();
-      return tasks;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch tasks');
-    }
-  }
-);
-
-export const createTask = createAsyncThunk(
-  'tasks/create',
-  async (taskData: CreateTaskDto, { rejectWithValue }) => {
-    try {
-      const task = await taskApi.createTask(taskData);
-      return task;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to create task');
-    }
-  }
-);
-
-export const updateTask = createAsyncThunk(
-  'tasks/update',
-  async ({ id, data }: { id: string; data: Partial<CreateTaskDto> }, { rejectWithValue }) => {
-    try {
-      const task = await taskApi.updateTask(id, data);
-      return task;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update task');
-    }
-  }
-);
-
-export const deleteTask = createAsyncThunk(
-  'tasks/delete',
-  async (id: string, { rejectWithValue }) => {
-    try {
-      await taskApi.deleteTask(id);
-      return id;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete task');
-    }
-  }
-);
-
-export const completeTask = createAsyncThunk(
-  'tasks/complete',
-  async (id: string, { rejectWithValue }) => {
-    try {
-      const task = await taskApi.completeTask(id);
-      return task;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to complete task');
-    }
-  }
-);
-
-const taskSlice = createSlice({
+export const TaskSlice = createSlice({
   name: 'tasks',
   initialState,
   reducers: {
-    setCurrentTask: (state, action) => {
+    setLoading: (state, action: { payload: boolean }) => {
+      state.isLoading = action.payload;
+    },
+    setError: (state, action: { payload: string | null }) => {
+      state.error = action.payload;
+    },
+    setPage: (state, action: { payload: number }) => {
+      state.currentPage = action.payload;
+      state.searchParams.page = action.payload;
+    },
+    setLoadMorePage: (state) => {
+      const nextPage = state.totalPages > state.currentPage ? state.currentPage + 1 : state.currentPage;
+      state.currentPage = nextPage;
+      state.searchParams.page = nextPage;
+    },
+    setPerPage: (state, action: { payload: number }) => {
+      state.perPage = action.payload;
+      state.searchParams.perPage = action.payload;
+    },
+    setSort: (state, action: { payload: { sort: string; isAsc: boolean } }) => {
+      state.sort = action.payload.sort;
+      state.isOrderAsc = action.payload.isAsc;
+      state.searchParams.sort = action.payload.sort;
+      state.searchParams.order = action.payload.isAsc ? 'asc' : 'desc';
+    },
+    setCurrentTask: (state, action: { payload: Task | null }) => {
       state.currentTask = action.payload;
     },
-    clearError: (state) => {
-      state.error = null;
+    setTaskStatus: (state, action: { payload: 'all' | 'active' | 'completed' }) => {
+      state.searchParams.status = action.payload;
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      // Fetch tasks cases
-      .addCase(fetchTasks.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchTasks.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.tasks = action.payload;
-      })
-      .addCase(fetchTasks.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      })
-
-      // Create task cases
-      .addCase(createTask.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(createTask.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.tasks.push(action.payload);
-      })
-      .addCase(createTask.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      })
-
-      // Update task cases
-      .addCase(updateTask.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(updateTask.fulfilled, (state, action) => {
-        state.isLoading = false;
-        const index = state.tasks.findIndex(task => task.id === action.payload.id);
-        if (index !== -1) {
-          state.tasks[index] = action.payload;
-        }
-      })
-      .addCase(updateTask.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      })
-
-      // Delete task cases
-      .addCase(deleteTask.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(deleteTask.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.tasks = state.tasks.filter(task => task.id !== action.payload);
-      })
-      .addCase(deleteTask.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      })
-
-      // Complete task cases
-      .addCase(completeTask.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(completeTask.fulfilled, (state, action) => {
-        state.isLoading = false;
-        const index = state.tasks.findIndex(task => task.id === action.payload.id);
-        if (index !== -1) {
-          state.tasks[index] = action.payload;
-        }
-      })
-      .addCase(completeTask.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      });
+    setPriority: (state, action: { payload: TaskPriority | undefined }) => {
+      state.searchParams.priority = action.payload;
+    },
+    // API Success Actions
+    getTasksSuccess: (state, action: { payload: any }) => {
+      console.log("Tasks payload =>", action.payload);
+      // Only append if we're paginating and have data
+      if (state.currentPage > 1 && action.payload.data?.length > 0) {
+        state.tasks = [...state.tasks, ...action.payload.data];
+      } else {
+        // Otherwise, replace the tasks array
+        state.tasks = action.payload.data || [];
+      }
+      state.totalPages = action.payload.totalPages;
+      state.total = action.payload.total;
+      state.count = action.payload.count;
+      state.perPage = action.payload.perPage;
+      state.currentPage = action.payload.currentPage;
+      state.error = null;
+      state.isLoading = false;
+    },
+    createTaskSuccess: (state, action: { payload: Task }) => {
+      state.tasks.unshift(action.payload);
+      state.total += 1;
+      state.count += 1;
+      state.error = null;
+      state.isLoading = false;
+    },
+    updateTaskSuccess: (state, action: { payload: Task }) => {
+      const index = state.tasks.findIndex(task => task.id === action.payload.id);
+      if (index !== -1) {
+        state.tasks[index] = action.payload;
+      }
+      state.error = null;
+      state.isLoading = false;
+    },
+    deleteTaskSuccess: (state, action: { payload: string }) => {
+      state.tasks = state.tasks.filter(task => task.id !== action.payload);
+      state.total -= 1;
+      state.count -= 1;
+      state.error = null;
+      state.isLoading = false;
+    },
+    completeTaskSuccess: (state, action: { payload: Task }) => {
+      const index = state.tasks.findIndex(task => task.id === action.payload.id);
+      if (index !== -1) {
+        state.tasks[index] = action.payload;
+      }
+      state.error = null;
+      state.isLoading = false;
+    },
+    // Reset Actions
+    resetTaskState: (state) => {
+      state.currentPage = 1;
+      state.perPage = 10;
+      state.searchParams = {
+        page: 1,
+        perPage: 10,
+        status: 'all',
+      };
+      state.sort = '';
+      state.isOrderAsc = true;
+    },
   },
 });
 
-export const { setCurrentTask, clearError } = taskSlice.actions;
-export default taskSlice.reducer; 
+// Export actions
+export const {
+  setLoading,
+  setError,
+  setPage,
+  setLoadMorePage,
+  setPerPage,
+  setSort,
+  setCurrentTask,
+  setTaskStatus,
+  setPriority,
+  getTasksSuccess,
+  createTaskSuccess,
+  updateTaskSuccess,
+  deleteTaskSuccess,
+  completeTaskSuccess,
+  resetTaskState,
+} = TaskSlice.actions;
+
+// Export selector
+export const taskSelector = (state: any): TaskState => state.tasks;
+
+export default TaskSlice.reducer; 

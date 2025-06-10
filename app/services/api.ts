@@ -81,13 +81,11 @@ export interface Task {
 export interface PaginatedResponse<T> {
   message: string;
   data: T[];
-  meta: {
-    perPage: number;
-    total: number;
-    count: number;
-    currentPage: number;
-    totalPages: number;
-  };
+  perPage: number;
+  total: number;
+  count: number;
+  currentPage: number;
+  totalPages: number;
 }
 
 // Create axios instance with base configuration
@@ -329,14 +327,24 @@ export const taskApi = {
     return response.data;
   },
 
-  getTasks: async (page: number = 1, pageSize: number = 10): Promise<PaginatedResponse<Task>> => {
-    const response = await api.get('/tasks', {
-      params: { 
-        page,
-        pageSize
+  getTasks: async (params?: {
+    page?: number;
+    perPage?: number;
+    sort?: string;
+    order?: 'asc' | 'desc';
+    status?: 'all' | 'active' | 'completed';
+    priority?: TaskPriority;
+  }): Promise<PaginatedResponse<Task>> => {
+    return await api.get('/tasks', {
+      params: {
+        page: params?.page || 1,
+        pageSize: params?.perPage || 10,
+        sort: params?.sort,
+        order: params?.order,
+        status: params?.status,
+        priority: params?.priority,
       }
     });
-    return response.data;
   },
 
   getTask: async (id: string): Promise<Task> => {

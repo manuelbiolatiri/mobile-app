@@ -9,13 +9,25 @@ import { initializeAuth } from './store/slices/authSlice';
 import { AppDispatch } from './store';
 import CustomErrorBoundary from './components/ErrorBoundary';
 import { LoadingScreen } from './components/LoadingScreen';
+import { PaperProvider, MD3LightTheme } from 'react-native-paper';
+
+const theme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: '#2563EB',
+    secondary: '#10B981',
+  },
+};
 
 export default function RootLayout() {
   return (
     <Provider store={store}>
-      <CustomErrorBoundary>
-        <RootLayoutNav />
-      </CustomErrorBoundary>
+      <PaperProvider theme={theme}>
+        <CustomErrorBoundary>
+          <RootLayoutNav />
+        </CustomErrorBoundary>
+      </PaperProvider>
     </Provider>
   );
 }

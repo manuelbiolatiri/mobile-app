@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Switch, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
-import { createTask } from './store/slices/taskSlice';
+import { createTask } from './store/actions/tasks';
 import { AppDispatch, RootState } from './store';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -25,9 +25,10 @@ type TaskFormData = {
 
 export default function CreateTaskScreen() {
   const dispatch = useDispatch<AppDispatch>();
-  const { isLoading } = useSelector((state: RootState) => state.tasks);
+  const { isLoading, error } = useSelector((state: RootState) => state.tasks);
   const [showStartDate, setShowStartDate] = useState(false);
   const [showEndDate, setShowEndDate] = useState(false);
+  const submittedRef = useRef(false);
   
   const { control, handleSubmit, formState: { errors }, watch, setValue } = useForm<TaskFormData>({
     defaultValues: {
@@ -45,15 +46,24 @@ export default function CreateTaskScreen() {
   const startDate = watch('startDate');
   const endDate = watch('endDate');
   
-  const onSubmit = (data: TaskFormData) => {
-    dispatch(createTask(data)).unwrap()
-      .then(() => {
-        router.back();
-      })
-      .catch((err) => {
-        console.error('Failed to create task:', err);
-      });
+  const onSubmit = async (data: TaskFormData) => {
+    submittedRef.current = true;
+    await dispatch(createTask(data));
   };
+
+  // Handle navigation and error display based on Redux state
+  useEffect(() => {
+    if (submittedRef.current && !isLoading) {
+      if (!error) {
+        // If task creation was successful and no error, navigate back
+        router.back();
+      } else {
+        // If task creation failed, log the error
+        console.error('Failed to create task:', error);
+      }
+      submittedRef.current = false; // Reset the flag after handling the submission result
+    }
+  }, [isLoading, error, router]);
   
   return (
     <KeyboardAvoidingView 
@@ -134,6 +144,12 @@ export default function CreateTaskScreen() {
               <Text style={styles.errorMessage}>{errors.description.message}</Text>
             )}
           </View>
+
+          {error && (
+            <View style={styles.errorMessageContainer}>
+              <Text style={styles.errorMessage}>{error}</Text>
+            </View>
+          )}
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Priority</Text>
@@ -271,7 +287,7 @@ export default function CreateTaskScreen() {
                   <DateTimePicker
                     value={value || new Date()}
                     mode="date"
-                    display="default"
+                    display="spinner"
                     onChange={(event: DateTimePickerEvent, date?: Date) => {
                       setShowStartDate(false);
                       if (date) {
@@ -304,7 +320,7 @@ export default function CreateTaskScreen() {
                   <DateTimePicker
                     value={value || new Date()}
                     mode="date"
-                    display="default"
+                    display="spinner"
                     onChange={(event: DateTimePickerEvent, date?: Date) => {
                       setShowEndDate(false);
                       if (date) {
@@ -413,6 +429,14 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     fontSize: 12,
     marginTop: 4,
+  },
+  errorMessageContainer: {
+    backgroundColor: '#FEE2E2',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#DC2626',
   },
   switchContainer: {
     flexDirection: 'row',
